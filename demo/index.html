@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Playground: Pendulum & Ramps</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 3px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .parameter-docs {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            width: 800px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Interactive Physics Playground</h1>
+    <p>Drag the objects with your mouse! Watch the pendulum swing and the shapes slide down the ramps.</p>
+    
+    <div id="physics-canvas"></div>
+
+    <div class="parameter-docs">
+        <h3>Documented Physics Parameters:</h3>
+        <ul>
+            <li><strong>Global Gravity:</strong> y = 1 (Standard downward force).</li>
+            <li><strong>Pendulum System:</strong> Bob Restitution (Bounciness) = 0.5, String Stiffness = 0.9.</li>
+            <li><strong>Ramp 1 (Steep - Left):</strong> Angle = 45&deg;, Static Friction = High. The blue circle has rolling friction.</li>
+            <li><strong>Ramp 2 (Shallow - Right):</strong> Angle = ~22.5&deg;, Static Friction = High. The purple box has sliding friction = 0.05.</li>
+        </ul>
+    </div>
+
+    <script>
+        // Module aliases for Matter.js
+        const Engine = Matter.Engine,
+              Render = Matter.Render,
+              Runner = Matter.Runner,
+              Bodies = Matter.Bodies,
+              Composite = Matter.Composite,
+              Constraint = Matter.Constraint,
+              Mouse = Matter.Mouse,
+              MouseConstraint = Matter.MouseConstraint;
+
+        // 1. Create the engine and world
+        const engine = Engine.create();
+        const render = Render.create({
+            element: document.getElementById('physics-canvas'),
+            engine: engine,
+            options: {
+                width: 800,
+                height: 600,
+                wireframes: false, // Set to false to see solid colors
+                background: '#e0e7ff'
+            }
+        });
+
+        // 2. Create the Pendulum (Center)
+        const pendulumAnchor = { x: 400, y: 50 };
+        const pendulumBob = Bodies.circle(400, 250, 30, { 
+            restitution: 0.5, 
+            render: { fillStyle: '#ef4444' } 
+        });
+        const pendulumString = Constraint.create({
+            pointA: pendulumAnchor,
+            bodyB: pendulumBob,
+            stiffness: 0.9,
+            render: { strokeStyle: '#4b5563', lineWidth: 3 }
+        });
+
+        // 3. Create Ramp 1 & Object (Left)
+        const ramp1 = Bodies.rectangle(150, 300, 300, 20, {
+            isStatic: true,
+            angle: Math.PI / 4, // 45 degrees
+            render: { fillStyle: '#10b981' }
+        });
+        const ball = Bodies.circle(50, 50, 20, { 
+            friction: 0.005, 
+            render: { fillStyle: '#3b82f6' } 
+        });
+
+        // 4. Create Ramp 2 & Object (Right)
+        const ramp2 = Bodies.rectangle(650, 400, 300, 20, {
+            isStatic: true,
+            angle: -Math.PI / 8, // Approx -22.5 degrees
+            render: { fillStyle: '#f59e0b' }
+        });
+        const box = Bodies.rectangle(750, 150, 40, 40, { 
+            friction: 0.05, 
+            render: { fillStyle: '#8b5cf6' } 
+        });
+
+        // 5. Create Boundaries (Ground and Walls)
+        const ground = Bodies.rectangle(400, 590, 810, 60, { isStatic: true, render: { fillStyle: '#4b5563' } });
+        const leftWall = Bodies.rectangle(0, 300, 60, 600, { isStatic: true, render: { visible: false }});
+        const rightWall = Bodies.rectangle(800, 300, 60, 600, { isStatic: true, render: { visible: false }});
+
+        // 6. Add Mouse Interaction
+        const mouse = Mouse.create(render.canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: { stiffness: 0.2, render: { visible: false } }
+        });
+        render.mouse = mouse;
+
+        // 7. Add all bodies to the world
+        Composite.add(engine.world, [
+            pendulumBob, pendulumString,
+            ramp1, ball,
+            ramp2, box,
+            ground, leftWall, rightWall,
+            mouseConstraint
+        ]);
+
+        // 8. Run the renderer and engine
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+    </script>
+</body>
+</html>
