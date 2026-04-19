@@ -12,11 +12,11 @@ A premium, interactive 3D physics sandbox built for GSoc 2026. This application 
 ## 🎬 Visual Demonstrations
 
 ### System Overview & Interactions
-https://github.com/user-attachments/assets/demo_physics_1.mov
+https://github.com/user-attachments/assets/pendulum.mov
 > *Watch part 1 of the high-fidelity interaction demo.*
 
 ### Advanced Physics Scenarios
-https://github.com/user-attachments/assets/demo_physics_2.mov
+https://github.com/user-attachments/assets/ramp.mov
 > *Watch part 2 showcasing torque, elastic collisions, and ramp kinematics.*
 
 *(Note: Videos are located in the `/assets` folder of this repository)*
