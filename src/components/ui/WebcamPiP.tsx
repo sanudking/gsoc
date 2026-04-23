@@ -20,9 +20,7 @@ const GESTURE_LABELS: Record<string, string> = {
   pinch: '🤏 Pinch',
   fist: '✊ Fist',
   point: '☝️ Point',
-  thumbs_up: '👍 Thumbs Up',
-  swipe_left: '👈 Swipe Left',
-  swipe_right: '👉 Swipe Right',
+  thumbs_up: '👍 Thumbs Up'
 };
 
 export default function WebcamPiP() {

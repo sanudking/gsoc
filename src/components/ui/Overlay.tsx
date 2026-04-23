@@ -53,8 +53,6 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
     fist: '✊',
     point: '☝️',
     thumbs_up: '👍',
-    swipe_left: '👈',
-    swipe_right: '👉',
   };
 
   return (
@@ -200,8 +198,6 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
                     {gesture === 'open_palm' && 'Move cursor / orbit camera'}
                     {gesture === 'fist' && 'Hold to reset the lab'}
                     {gesture === 'point' && 'Aim at objects'}
-                    {gesture === 'swipe_left' && 'Switching to previous lab'}
-                    {gesture === 'swipe_right' && 'Switching to next lab'}
                     {gesture === 'thumbs_up' && 'Nice one! 👍'}
                     {gesture === 'none' && 'Show your hand to the camera'}
                   </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import './index.css';
 import Playground from './components/scene/Playground';
 import Overlay from './components/ui/Overlay';
@@ -19,7 +19,6 @@ export interface PhysicsParams {
   leverMassScale: number;
 }
 
-const EXPERIMENT_ORDER: ExperimentType[] = ['pendulum', 'ramp', 'lever', 'bouncing'];
 
 function AppInner() {
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentType>('pendulum');
@@ -44,7 +43,7 @@ function AppInner() {
     resetPhysics: 0
   });
 
-  const { gesture, thumbsUpHeld, pinchReleased, cursorX, isTracking } = useHandTracking();
+  const { thumbsUpHeld, pinchReleased, cursorX, isTracking } = useHandTracking();
 
   // ── Gesture: Thumbs Up held → reset ──
   useEffect(() => {

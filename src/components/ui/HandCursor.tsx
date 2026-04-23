@@ -3,13 +3,13 @@ import { useHandTracking } from '../../lib/gesture/HandTrackingContext';
 const GESTURE_HINT: Record<string, string> = {
   open_palm: 'Move to orbit',
   pinch: 'Grabbing...',
-  fist: 'Hold to reset',
+  fist: 'Orbiting...',
   point: 'Pointing',
-  thumbs_up: 'Nice!',
+  thumbs_up: 'Hold to reset',
 };
 
 export default function HandCursor() {
-  const { isTracking, cursorX, cursorY, gesture, isPinching, fistHeld } = useHandTracking();
+  const { isTracking, cursorX, cursorY, gesture, isPinching, thumbsUpHeld } = useHandTracking();
 
   if (!isTracking || gesture === 'none') return null;
 
@@ -18,8 +18,8 @@ export default function HandCursor() {
 
   let className = 'hand-cursor';
   if (isPinching) className += ' pinching';
-  if (gesture === 'fist') className += ' fist';
-  if (fistHeld) className += ' fist-held';
+  if (gesture === 'thumbs_up') className += ' fist';
+  if (thumbsUpHeld) className += ' fist-held';
 
   return (
     <>
@@ -39,7 +39,7 @@ export default function HandCursor() {
             top: `${screenY - 10}px`,
           }}
         >
-          {fistHeld ? '🔄 Resetting...' : GESTURE_HINT[gesture]}
+          {thumbsUpHeld ? '🔄 Resetting...' : GESTURE_HINT[gesture]}
         </div>
       )}
     </>
