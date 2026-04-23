@@ -23,7 +23,7 @@ export default function Playground({ currentExperiment, params, triggers }: Play
         Key forces recreation of the physics world entirely when resetting parameters 
         or hitting "resetPhysics" trigger
       */}
-      <Canvas shadows camera={{ position: [0, 5, 14], fov: 40 }} key={triggers.resetPhysics}>
+      <Canvas shadows camera={{ position: [0, 5, 14], fov: 40 }}>
         <SoftShadows size={20} samples={16} focus={0.5} />
         <color attach="background" args={['#06080d']} />
         
@@ -38,7 +38,7 @@ export default function Playground({ currentExperiment, params, triggers }: Play
         <pointLight position={[-10, 5, -10]} intensity={0.6} color="#8be9fd" />
         <pointLight position={[10, -5, 10]} intensity={0.2} color="#ff79c6" />
 
-        <Physics gravity={gravityConfig} defaultContactMaterial={{ friction: params.friction, restitution: params.restitution }}>
+        <Physics key={`physics-${triggers.resetPhysics}-${currentExperiment}`} gravity={gravityConfig} defaultContactMaterial={{ friction: params.friction, restitution: params.restitution }}>
           {currentExperiment === 'pendulum' && <PendulumLab params={params} />}
           {currentExperiment === 'ramp' && <RampLab key={`ramp-${params.rampAngle}-${params.rampLength}`} params={params} triggers={triggers} />}
           {currentExperiment === 'lever' && <LeverLab key={`lever-${params.leverMassScale}`} params={params} triggers={triggers} />}
