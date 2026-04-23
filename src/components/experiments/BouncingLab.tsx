@@ -1,6 +1,6 @@
 import { usePlane, useSphere, useBox } from '@react-three/cannon';
 import { useFrame } from '@react-three/fiber';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import * as THREE from 'three';
 import type { PhysicsParams } from '../../App';
 
