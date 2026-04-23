@@ -117,13 +117,19 @@ export default function PendulumLab({ params }: { params: PhysicsParams }) {
         onPointerUp={() => { 
           setIsDragging(false); 
           bobApi.mass.set(params.pendulumMass); 
-          bobApi.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+          const vx = Math.max(-30, Math.min(30, dragVelRef.current.x));
+          const vy = Math.max(-30, Math.min(30, dragVelRef.current.y));
+          const vz = Math.max(-30, Math.min(30, dragVelRef.current.z));
+          bobApi.velocity.set(vx, vy, vz);
         }}
         onPointerMissed={() => { 
           if(isDragging) { 
             setIsDragging(false); 
             bobApi.mass.set(params.pendulumMass); 
-            bobApi.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+            const vx = Math.max(-30, Math.min(30, dragVelRef.current.x));
+            const vy = Math.max(-30, Math.min(30, dragVelRef.current.y));
+            const vz = Math.max(-30, Math.min(30, dragVelRef.current.z));
+            bobApi.velocity.set(vx, vy, vz);
           } 
         }}
       >

@@ -49,14 +49,20 @@ function BouncyBall({ position, color, restitution }: { position: [number, numbe
       }}
       onPointerUp={() => { 
         setIsDragging(false); 
-        api.mass.set(1); 
-        api.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+        api.mass.set(1);
+        const vx = Math.max(-30, Math.min(30, dragVelRef.current.x));
+        const vy = Math.max(-30, Math.min(30, dragVelRef.current.y));
+        const vz = Math.max(-30, Math.min(30, dragVelRef.current.z));
+        api.velocity.set(vx, vy, vz);
       }}
       onPointerMissed={() => { 
         if(isDragging) { 
           setIsDragging(false); 
           api.mass.set(1); 
-          api.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+          const vx = Math.max(-30, Math.min(30, dragVelRef.current.x));
+          const vy = Math.max(-30, Math.min(30, dragVelRef.current.y));
+          const vz = Math.max(-30, Math.min(30, dragVelRef.current.z));
+          api.velocity.set(vx, vy, vz);
         } 
       }}
     >

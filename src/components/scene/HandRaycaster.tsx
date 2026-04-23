@@ -103,7 +103,7 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
     const nowPinching = isPinching;
     const wasPinching = wasPinchingRef.current;
     
-    const nowOrbiting = gesture === 'open_palm';
+    const nowOrbiting = gesture === 'fist';
     const wasOrbiting = isOrbitingRef.current;
 
     // PINCH LOGIC - For interactive physics objects
