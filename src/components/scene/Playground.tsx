@@ -1,12 +1,15 @@
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/cannon';
 import { Environment, OrbitControls, ContactShadows, SoftShadows } from '@react-three/drei';
+import { useState, useCallback } from 'react';
 import type { ExperimentType, PhysicsParams } from '../../App';
 
 import PendulumLab from '../experiments/PendulumLab';
 import RampLab from '../experiments/RampLab';
 import LeverLab from '../experiments/LeverLab';
 import BouncingLab from '../experiments/BouncingLab';
+import HandRaycaster from './HandRaycaster';
+import { useHandTracking } from '../../lib/gesture/HandTrackingContext';
 
 interface PlaygroundProps {
   currentExperiment: ExperimentType;
@@ -16,7 +19,14 @@ interface PlaygroundProps {
 
 export default function Playground({ currentExperiment, params, triggers }: PlaygroundProps) {
   const gravityConfig: [number, number, number] = [0, -params.gravity, 0];
+  const { isTracking } = useHandTracking();
   
+  // Disable OrbitControls when hand is actively grabbing a physics object
+  const [handGrabbing, setHandGrabbing] = useState(false);
+  const handleGrabChange = useCallback((grabbing: boolean) => {
+    setHandGrabbing(grabbing);
+  }, []);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0 }}>
       {/* 
@@ -45,6 +55,9 @@ export default function Playground({ currentExperiment, params, triggers }: Play
           {currentExperiment === 'bouncing' && <BouncingLab key={`bounce-${params.restitution}-${params.dropHeight}`} params={params} />}
         </Physics>
 
+        {/* Hand tracking 3D cursor + raycaster */}
+        {isTracking && <HandRaycaster onGrabChange={handleGrabChange} />}
+
         {/* Beautiful ground reflection/shadow plane */}
         <ContactShadows resolution={1024} scale={50} blur={2} opacity={0.5} far={15} color="#000000" position={[0, -3.99, 0]} />
         <mesh position={[0, -4, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -55,7 +68,15 @@ export default function Playground({ currentExperiment, params, triggers }: Play
         {/* Grid floor overlay */}
         <gridHelper args={[100, 100, '#333b5c', '#151926']} position={[0, -3.98, 0]} />
 
-        <OrbitControls makeDefault enablePan={true} maxPolarAngle={Math.PI / 2 + 0.15} minDistance={3} maxDistance={30} />
+        {/* Disable orbit when hand is grabbing an object */}
+        <OrbitControls
+          makeDefault
+          enabled={!handGrabbing}
+          enablePan={true}
+          maxPolarAngle={Math.PI / 2 + 0.15}
+          minDistance={3}
+          maxDistance={30}
+        />
         <Environment preset="studio" blur={0.8} />
       </Canvas>
     </div>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import Playground from './components/scene/Playground';
 import Overlay from './components/ui/Overlay';
+import { HandTrackingProvider, useHandTracking } from './lib/gesture/HandTrackingContext';
 
 export type ExperimentType = 'pendulum' | 'ramp' | 'bouncing' | 'lever';
 
@@ -18,7 +19,9 @@ export interface PhysicsParams {
   leverMassScale: number;
 }
 
-function App() {
+const EXPERIMENT_ORDER: ExperimentType[] = ['pendulum', 'ramp', 'lever', 'bouncing'];
+
+function AppInner() {
   const [currentExperiment, setCurrentExperiment] = useState<ExperimentType>('pendulum');
   
   const [params, setParams] = useState<PhysicsParams>({
@@ -41,6 +44,55 @@ function App() {
     resetPhysics: 0
   });
 
+  const { gesture, fistHeld, pinchReleased, cursorX, isTracking } = useHandTracking();
+
+  // ── Gesture: Swipe to switch experiments ──
+  const switchExperiment = useCallback((direction: 'next' | 'prev') => {
+    setCurrentExperiment(prev => {
+      const idx = EXPERIMENT_ORDER.indexOf(prev);
+      if (direction === 'next') {
+        return EXPERIMENT_ORDER[(idx + 1) % EXPERIMENT_ORDER.length];
+      } else {
+        return EXPERIMENT_ORDER[(idx - 1 + EXPERIMENT_ORDER.length) % EXPERIMENT_ORDER.length];
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isTracking) return;
+    if (gesture === 'swipe_right') {
+      switchExperiment('next');
+    } else if (gesture === 'swipe_left') {
+      switchExperiment('prev');
+    }
+  }, [gesture, isTracking, switchExperiment]);
+
+  // ── Gesture: Fist held → reset ──
+  useEffect(() => {
+    if (!isTracking) return;
+    if (fistHeld) {
+      setTriggers(prev => ({ ...prev, resetPhysics: prev.resetPhysics + 1 }));
+    }
+  }, [fistHeld, isTracking]);
+
+  // ── Gesture: Pinch release → lab-specific actions ──
+  useEffect(() => {
+    if (!isTracking || !pinchReleased) return;
+
+    if (currentExperiment === 'ramp') {
+      setTriggers(prev => ({ ...prev, rampDrop: prev.rampDrop + 1 }));
+    }
+
+    if (currentExperiment === 'lever') {
+      // Left half of screen → drop left, right half → drop right
+      if (cursorX < 0.5) {
+        setTriggers(prev => ({ ...prev, leverDropLeft: prev.leverDropLeft + 1 }));
+      } else {
+        setTriggers(prev => ({ ...prev, leverDropRight: prev.leverDropRight + 1 }));
+      }
+    }
+  }, [pinchReleased, isTracking, currentExperiment, cursorX]);
+
   return (
     <>
       <Playground 
@@ -57,6 +109,14 @@ function App() {
         onTrigger={(type) => setTriggers(prev => ({ ...prev, [type]: prev[type as keyof typeof triggers] + 1 }))}
       />
     </>
+  );
+}
+
+function App() {
+  return (
+    <HandTrackingProvider>
+      <AppInner />
+    </HandTrackingProvider>
   );
 }
 

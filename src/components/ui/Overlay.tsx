@@ -1,5 +1,8 @@
 import type { ExperimentType, PhysicsParams } from '../../App';
-import { CircleOff, ArrowRightToLine, MoveUp, Beaker, RotateCcw, Settings2, Calculator, PlaySquare } from 'lucide-react';
+import { CircleOff, ArrowRightToLine, MoveUp, Beaker, RotateCcw, Settings2, Calculator, PlaySquare, Hand, Loader2 } from 'lucide-react';
+import { useHandTracking } from '../../lib/gesture/HandTrackingContext';
+import WebcamPiP from './WebcamPiP';
+import HandCursor from './HandCursor';
 
 interface OverlayProps {
   currentExperiment: ExperimentType;
@@ -11,6 +14,8 @@ interface OverlayProps {
 }
 
 export default function Overlay({ currentExperiment, onSelect, params, onParamsChange, onTrigger }: OverlayProps) {
+  const { isTracking, isLoading, error, gesture, startTracking, stopTracking } = useHandTracking();
+
   const experiments: { id: ExperimentType, label: string, icon: any, desc: string }[] = [
     { id: 'pendulum', label: 'Pendulum Lab', icon: CircleOff, desc: 'Simple harmonic motion' },
     { id: 'ramp', label: 'Inclined Plane', icon: ArrowRightToLine, desc: 'Kinematics & forces' },
@@ -41,6 +46,16 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
       </div>
     </div>
   );
+
+  const GESTURE_ICONS: Record<string, string> = {
+    open_palm: '🖐️',
+    pinch: '🤏',
+    fist: '✊',
+    point: '☝️',
+    thumbs_up: '👍',
+    swipe_left: '👈',
+    swipe_right: '👉',
+  };
 
   return (
     <div className="ui-layer" style={{ pointerEvents: 'none' }}>
@@ -125,6 +140,78 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
         {/* RIGHT PANEL - CONTROLS */}
         <div className="glass-panel animate-fade-in" style={{ width: '320px', alignSelf: 'flex-start' }}>
           
+          {/* HAND TRACKING TOGGLE */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => isTracking ? stopTracking() : startTracking()}
+              disabled={isLoading}
+              className={`hand-toggle-btn ${isTracking ? 'active-tracking' : ''}`}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.6rem',
+                padding: '0.7rem',
+                borderRadius: '8px',
+                border: isTracking
+                  ? '1px solid rgba(3, 218, 198, 0.6)'
+                  : '1px solid rgba(255, 255, 255, 0.2)',
+                background: isTracking
+                  ? 'linear-gradient(135deg, rgba(3, 218, 198, 0.15), rgba(187, 134, 252, 0.15))'
+                  : 'rgba(255,255,255,0.05)',
+                fontWeight: 'bold',
+                cursor: isLoading ? 'wait' : 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              {isLoading ? (
+                <Loader2 size={18} className="spin-icon" />
+              ) : (
+                <Hand size={18} />
+              )}
+              {isLoading
+                ? 'Loading Hand Detection...'
+                : isTracking
+                  ? '🟢  Hand Control Active'
+                  : '🖐️  Enable Hand Control'}
+            </button>
+            {error && (
+              <div style={{ color: '#ff5555', fontSize: '0.75rem', marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(255,85,85,0.1)', borderRadius: '6px' }}>
+                ⚠️ {error}
+              </div>
+            )}
+            {isTracking && (
+              <div className="gesture-status" style={{ marginTop: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem' }}>
+                <span style={{ 
+                  fontSize: '1.5rem',
+                  filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.3))',
+                  minWidth: '32px',
+                  textAlign: 'center'
+                }}>
+                  {GESTURE_ICONS[gesture] || '⏳'}
+                </span>
+                <div>
+                  <div style={{ fontWeight: 600, textTransform: 'capitalize', color: '#8be9fd' }}>
+                    {gesture === 'none' ? 'Waiting for hand...' : gesture.replace(/_/g, ' ')}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                    {gesture === 'pinch' && 'Grab objects in the scene'}
+                    {gesture === 'open_palm' && 'Move cursor / orbit camera'}
+                    {gesture === 'fist' && 'Hold to reset the lab'}
+                    {gesture === 'point' && 'Aim at objects'}
+                    {gesture === 'swipe_left' && 'Switching to previous lab'}
+                    {gesture === 'swipe_right' && 'Switching to next lab'}
+                    {gesture === 'thumbs_up' && 'Nice one! 👍'}
+                    {gesture === 'none' && 'Show your hand to the camera'}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '0 0 1.5rem 0' }} />
+
           {/* ACTION BUTTONS */}
           <div style={{ marginBottom: '1.5rem' }}>
              <h2 style={{ fontSize: '1.1rem', marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -188,6 +275,147 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
           </div>
         </div>
       </div>
+
+      {/* HAND TRACKING OVERLAYS (rendered in the pointer-events: none layer) */}
+      {isTracking && <HandCursor />}
+      {isTracking && (
+        <div style={{ pointerEvents: 'auto' }}>
+          <WebcamPiP />
+        </div>
+      )}
+
+      {/* GESTURE CONTROLS GUIDE */}
+      {isTracking && (
+        <div className="gesture-guide glass-panel animate-fade-in" style={{
+          position: 'absolute',
+          bottom: '2rem',
+          left: '2rem',
+          width: '280px',
+          padding: '1rem 1.2rem',
+          pointerEvents: 'auto',
+          zIndex: 90,
+        }}>
+          <h3 style={{
+            margin: '0 0 0.7rem 0',
+            fontSize: '0.9rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            color: '#8be9fd',
+            letterSpacing: '0.03em',
+          }}>
+            🎮 Gesture Controls
+          </h3>
+
+          {/* Global gestures */}
+          <div style={{ marginBottom: '0.6rem' }}>
+            <div style={{
+              fontSize: '0.65rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: 'rgba(255,255,255,0.4)',
+              marginBottom: '0.4rem',
+              fontWeight: 600,
+            }}>
+              Global
+            </div>
+            <GestureRow emoji="👋" label="Swipe L/R" desc="Switch experiment" active={gesture === 'swipe_left' || gesture === 'swipe_right'} />
+            <GestureRow emoji="✊" label="Hold Fist 1.5s" desc="Reset lab" active={gesture === 'fist'} />
+            <GestureRow emoji="🖐️" label="Open Palm" desc="Move cursor" active={gesture === 'open_palm'} />
+          </div>
+
+          {/* Experiment-specific gestures */}
+          <div>
+            <div style={{
+              fontSize: '0.65rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: 'rgba(255,255,255,0.4)',
+              marginBottom: '0.4rem',
+              fontWeight: 600,
+            }}>
+              {currentExperiment === 'pendulum' && '🕒 Pendulum'}
+              {currentExperiment === 'ramp' && '📐 Ramp'}
+              {currentExperiment === 'lever' && '⚖️ Lever'}
+              {currentExperiment === 'bouncing' && '🎾 Bouncing'}
+            </div>
+
+            {currentExperiment === 'pendulum' && (
+              <>
+                <GestureRow emoji="🤏" label="Pinch + Move" desc="Grab & swing bob" active={gesture === 'pinch'} />
+                <GestureRow emoji="✋" label="Release Pinch" desc="Drop the bob" active={false} />
+              </>
+            )}
+
+            {currentExperiment === 'ramp' && (
+              <>
+                <GestureRow emoji="🤏" label="Pinch → Release" desc="Drop ball from top" active={gesture === 'pinch'} />
+              </>
+            )}
+
+            {currentExperiment === 'lever' && (
+              <>
+                <GestureRow emoji="🤏" label="Pinch left side" desc="Drop weight left" active={gesture === 'pinch'} />
+                <GestureRow emoji="🤏" label="Pinch right side" desc="Drop weight right" active={gesture === 'pinch'} />
+              </>
+            )}
+
+            {currentExperiment === 'bouncing' && (
+              <>
+                <GestureRow emoji="🤏" label="Pinch + Move" desc="Grab & throw ball" active={gesture === 'pinch'} />
+                <GestureRow emoji="✋" label="Release Pinch" desc="Throw with velocity" active={false} />
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Single gesture row in the guide */
+function GestureRow({ emoji, label, desc, active }: { emoji: string; label: string; desc: string; active: boolean }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.6rem',
+      padding: '0.3rem 0.45rem',
+      marginBottom: '0.2rem',
+      borderRadius: '6px',
+      background: active ? 'rgba(80, 250, 123, 0.12)' : 'transparent',
+      border: active ? '1px solid rgba(80, 250, 123, 0.3)' : '1px solid transparent',
+      transition: 'all 0.2s ease',
+    }}>
+      <span style={{ fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{emoji}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: '0.78rem',
+          fontWeight: 600,
+          color: active ? '#50fa7b' : 'rgba(255,255,255,0.9)',
+          transition: 'color 0.2s',
+        }}>
+          {label}
+        </div>
+        <div style={{
+          fontSize: '0.67rem',
+          color: 'rgba(255,255,255,0.45)',
+          lineHeight: 1.2,
+        }}>
+          {desc}
+        </div>
+      </div>
+      {active && (
+        <div style={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: '#50fa7b',
+          boxShadow: '0 0 6px rgba(80,250,123,0.8)',
+          flexShrink: 0,
+        }} />
+      )}
     </div>
   );
 }

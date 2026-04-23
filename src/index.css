@@ -98,27 +98,38 @@ button.active {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
 
-/* Webcam Preview */
+/* ═══════════════════════════════════════════════════════════
+   HAND TRACKING STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Webcam Preview PiP */
 .webcam-pip {
   position: absolute;
   bottom: 2rem;
   right: 2rem;
-  width: 240px;
-  height: 180px;
-  border-radius: 12px;
+  width: 260px;
+  height: 195px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(3, 218, 198, 0.3);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(3, 218, 198, 0.08);
   background-color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  z-index: 100;
+  transition: border-color 0.3s;
+}
+.webcam-pip:hover {
+  border-color: rgba(3, 218, 198, 0.6);
 }
 .webcam-pip video {
   width: 100%;
   height: 100%;
-  object-fit:-cover;
+  object-fit: cover;
   transform: scaleX(-1); /* mirror */
 }
 .webcam-pip canvas {
@@ -130,22 +141,115 @@ button.active {
   pointer-events: none;
 }
 
-/* Hands cursor */
+/* Hand Cursor */
 .hand-cursor {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background-color: rgba(255, 80, 80, 0.6);
-  border: 2px solid white;
+  background-color: rgba(139, 233, 253, 0.25);
+  border: 2px solid rgba(139, 233, 253, 0.8);
   pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 9999;
-  transition: transform 0.1s;
-  box-shadow: 0 0 10px rgba(255,80,80, 0.8);
+  transition: transform 0.08s ease-out, background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-shadow:
+    0 0 12px rgba(139, 233, 253, 0.4),
+    0 0 24px rgba(139, 233, 253, 0.15);
 }
+
+/* Pinch = grab active */
 .hand-cursor.pinching {
-  background-color: rgba(50, 255, 50, 0.8);
-  box-shadow: 0 0 15px rgba(50, 255, 50, 0.9);
-  transform: translate(-50%, -50%) scale(0.8);
+  background-color: rgba(80, 250, 123, 0.6);
+  border-color: rgba(80, 250, 123, 1);
+  box-shadow:
+    0 0 16px rgba(80, 250, 123, 0.7),
+    0 0 32px rgba(80, 250, 123, 0.3);
+  transform: translate(-50%, -50%) scale(0.75);
+}
+
+/* Fist = action trigger */
+.hand-cursor.fist {
+  background-color: rgba(255, 85, 85, 0.4);
+  border-color: rgba(255, 85, 85, 0.9);
+  box-shadow:
+    0 0 14px rgba(255, 85, 85, 0.6),
+    0 0 28px rgba(255, 85, 85, 0.2);
+  animation: fistPulse 0.6s ease-in-out infinite;
+}
+
+/* Fist held long enough = reset animation */
+.hand-cursor.fist-held {
+  background-color: rgba(255, 183, 77, 0.6);
+  border-color: rgba(255, 183, 77, 1);
+  box-shadow:
+    0 0 20px rgba(255, 183, 77, 0.8),
+    0 0 40px rgba(255, 183, 77, 0.4);
+  animation: fistHeldSpin 0.5s linear infinite;
+}
+
+@keyframes fistPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+@keyframes fistHeldSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg) scale(1.1); }
+  to { transform: translate(-50%, -50%) rotate(360deg) scale(1.1); }
+}
+
+/* Interaction hint label near cursor */
+.hand-hint {
+  position: absolute;
+  pointer-events: none;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: left 0.08s ease-out, top 0.08s ease-out;
+}
+
+/* Hand toggle button styles */
+.hand-toggle-btn.active-tracking {
+  animation: trackingGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes trackingGlow {
+  0% {
+    box-shadow: 0 0 8px rgba(3, 218, 198, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 16px rgba(3, 218, 198, 0.4), 0 0 32px rgba(187, 134, 252, 0.15);
+  }
+}
+
+/* Spinner for loading state */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+/* Gesture status area */
+.gesture-status {
+  padding: 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Swipe transition overlay */
+@keyframes swipeFlash {
+  0% { opacity: 0; }
+  20% { opacity: 0.15; }
+  100% { opacity: 0; }
 }
