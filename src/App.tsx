@@ -43,7 +43,7 @@ function AppInner() {
     resetPhysics: 0
   });
 
-  const { thumbsUpHeld, pinchReleased, cursorX, isTracking } = useHandTracking();
+  const { thumbsUpHeld, pointTriggered, cursorX, isTracking } = useHandTracking();
 
   // ── Gesture: Thumbs Up held → reset ──
   useEffect(() => {
@@ -53,9 +53,9 @@ function AppInner() {
     }
   }, [thumbsUpHeld, isTracking]);
 
-  // ── Gesture: Pinch release → lab-specific actions ──
+  // ── Gesture: Point triggered → lab-specific actions ──
   useEffect(() => {
-    if (!isTracking || !pinchReleased) return;
+    if (!isTracking || !pointTriggered) return;
 
     if (currentExperiment === 'ramp') {
       setTriggers(prev => ({ ...prev, rampDrop: prev.rampDrop + 1 }));

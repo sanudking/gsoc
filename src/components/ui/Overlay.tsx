@@ -346,14 +346,14 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
 
             {currentExperiment === 'ramp' && (
               <>
-                <GestureRow emoji="🤏" label="Pinch → Release" desc="Drop ball from top" active={gesture === 'pinch'} />
+                <GestureRow emoji="☝️" label="Point" desc="Drop ball from top" active={gesture === 'point'} />
               </>
             )}
 
             {currentExperiment === 'lever' && (
               <>
-                <GestureRow emoji="🤏" label="Pinch left side" desc="Drop weight left" active={gesture === 'pinch'} />
-                <GestureRow emoji="🤏" label="Pinch right side" desc="Drop weight right" active={gesture === 'pinch'} />
+                <GestureRow emoji="☝️" label="Point left side" desc="Drop weight left" active={gesture === 'point'} />
+                <GestureRow emoji="☝️" label="Point right side" desc="Drop weight right" active={gesture === 'point'} />
               </>
             )}
 

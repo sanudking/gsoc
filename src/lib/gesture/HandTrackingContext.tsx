@@ -31,6 +31,10 @@ export interface HandTrackingState {
   isPinching: boolean;
   /** Primary hand pinch was just released this frame. */
   pinchReleased: boolean;
+  /** Primary hand is pointing. */
+  isPointing: boolean;
+  /** Primary hand pointed just triggered this frame. */
+  pointTriggered: boolean;
   /** Primary hand thumbs up held > 1.5s. */
   thumbsUpHeld: boolean;
 
@@ -65,6 +69,8 @@ const defaultState: HandTrackingState = {
   cursorY: 0.5,
   isPinching: false,
   pinchReleased: false,
+  isPointing: false,
+  pointTriggered: false,
   thumbsUpHeld: false,
   dualState: emptyDualState,
   prevDualState: emptyDualState,
@@ -97,11 +103,14 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
     cursorY: 0.5,
     isPinching: false,
     pinchReleased: false,
+    isPointing: false,
+    pointTriggered: false,
     thumbsUpHeld: false,
     dualState: emptyDualState,
     prevDualState: emptyDualState,
     rawResult: null as HandResult | null,
     wasPinching: false,
+    wasPointing: false,
   });
 
   // We use a counter state to trigger re-renders at a throttled rate
@@ -127,11 +136,19 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
       s.pinchReleased = s.wasPinching && !nowPinching;
       s.isPinching = nowPinching;
       s.wasPinching = nowPinching;
+
+      const nowPointing = dual.primary.gesture === 'point';
+      s.pointTriggered = !s.wasPointing && nowPointing;
+      s.isPointing = nowPointing;
+      s.wasPointing = nowPointing;
+
       s.thumbsUpHeld = isThumbsUpHeld(dual.primary.handType, result.timestamp);
     } else {
       s.gesture = 'none';
       s.isPinching = false;
       s.pinchReleased = false;
+      s.isPointing = false;
+      s.pointTriggered = false;
       s.thumbsUpHeld = false;
     }
   }, []);
@@ -186,11 +203,14 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
       cursorY: 0.5,
       isPinching: false,
       pinchReleased: false,
+      isPointing: false,
+      pointTriggered: false,
       thumbsUpHeld: false,
       dualState: emptyDualState,
       prevDualState: emptyDualState,
       rawResult: null,
       wasPinching: false,
+      wasPointing: false,
     };
     setIsTracking(false);
     setError(null);
@@ -219,6 +239,8 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
     cursorY: s.cursorY,
     isPinching: s.isPinching,
     pinchReleased: s.pinchReleased,
+    isPointing: s.isPointing,
+    pointTriggered: s.pointTriggered,
     thumbsUpHeld: s.thumbsUpHeld,
     dualState: s.dualState,
     prevDualState: s.prevDualState,

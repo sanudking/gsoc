@@ -4,7 +4,7 @@ const GESTURE_HINT: Record<string, string> = {
   open_palm: 'Hover',
   pinch: 'Grabbing...',
   fist: 'Orbiting...',
-  point: 'Pointing',
+  point: 'Action!',
   thumbs_up: 'Hold to reset',
 };
 
