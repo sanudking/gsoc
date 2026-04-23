@@ -100,7 +100,6 @@ Visualize restitution and energy loss in a controlled environment.
 ---
 
 ## 💎 Design Philosophy
-The project was designed to be "100x better" than standard educational apps. It utilizes:
 - **Studio Environment Lighting:** Soft shadows and reflections for a premium feel.
 - **Zero-Drop Spawning:** Avoiding physics engine artifacts by intelligently placing objects.
 - **Glassmorphism:** A modern, translucent UI that floats over the 3D scene without obstructing it.
