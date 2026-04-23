@@ -78,8 +78,8 @@ Visualize restitution and energy loss in a controlled environment.
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [your-github-url]
-   cd physicsSanu
+   git clone https://github.com/sanudking/gsoc.git
+   cd gsoc
    ```
 
 2. Install dependencies:
