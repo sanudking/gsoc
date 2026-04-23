@@ -320,8 +320,8 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
             }}>
               Global
             </div>
-            <GestureRow emoji="👋" label="Swipe L/R" desc="Switch experiment" active={gesture === 'swipe_left' || gesture === 'swipe_right'} />
-            <GestureRow emoji="✊" label="Hold Fist 1.5s" desc="Reset lab" active={gesture === 'fist'} />
+            <GestureRow emoji="✊" label="Fist + Move" desc="Orbit camera" active={gesture === 'fist'} />
+            <GestureRow emoji="👍" label="Hold Thumbs Up 1.5s" desc="Reset lab" active={gesture === 'thumbs_up'} />
             <GestureRow emoji="🖐️" label="Open Palm" desc="Move cursor" active={gesture === 'open_palm'} />
           </div>
 

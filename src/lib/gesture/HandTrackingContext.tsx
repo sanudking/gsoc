@@ -11,7 +11,7 @@ import { HandTracker, type HandResult } from './HandTracker';
 import {
   classifyDualHands,
   resetClassifier,
-  isFistHeld,
+  isThumbsUpHeld,
   type DualHandState,
   type GestureType,
 } from './GestureClassifier';
@@ -31,8 +31,8 @@ export interface HandTrackingState {
   isPinching: boolean;
   /** Primary hand pinch was just released this frame. */
   pinchReleased: boolean;
-  /** Primary hand fist held > 1.5s. */
-  fistHeld: boolean;
+  /** Primary hand thumbs up held > 1.5s. */
+  thumbsUpHeld: boolean;
 
   /** Full dual-hand state for advanced gestures. */
   dualState: DualHandState;
@@ -65,7 +65,7 @@ const defaultState: HandTrackingState = {
   cursorY: 0.5,
   isPinching: false,
   pinchReleased: false,
-  fistHeld: false,
+  thumbsUpHeld: false,
   dualState: emptyDualState,
   prevDualState: emptyDualState,
   rawResult: null,
@@ -97,7 +97,7 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
     cursorY: 0.5,
     isPinching: false,
     pinchReleased: false,
-    fistHeld: false,
+    thumbsUpHeld: false,
     dualState: emptyDualState,
     prevDualState: emptyDualState,
     rawResult: null as HandResult | null,
@@ -127,12 +127,12 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
       s.pinchReleased = s.wasPinching && !nowPinching;
       s.isPinching = nowPinching;
       s.wasPinching = nowPinching;
-      s.fistHeld = isFistHeld(dual.primary.handType, result.timestamp);
+      s.thumbsUpHeld = isThumbsUpHeld(dual.primary.handType, result.timestamp);
     } else {
       s.gesture = 'none';
       s.isPinching = false;
       s.pinchReleased = false;
-      s.fistHeld = false;
+      s.thumbsUpHeld = false;
     }
   }, []);
 
@@ -186,7 +186,7 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
       cursorY: 0.5,
       isPinching: false,
       pinchReleased: false,
-      fistHeld: false,
+      thumbsUpHeld: false,
       dualState: emptyDualState,
       prevDualState: emptyDualState,
       rawResult: null,
@@ -219,7 +219,7 @@ export function HandTrackingProvider({ children }: { children: ReactNode }) {
     cursorY: s.cursorY,
     isPinching: s.isPinching,
     pinchReleased: s.pinchReleased,
-    fistHeld: s.fistHeld,
+    thumbsUpHeld: s.thumbsUpHeld,
     dualState: s.dualState,
     prevDualState: s.prevDualState,
     rawResult: s.rawResult,

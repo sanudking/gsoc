@@ -18,9 +18,7 @@ export type GestureType =
   | 'pinch'
   | 'fist'
   | 'point'
-  | 'thumbs_up'
-  | 'swipe_left'
-  | 'swipe_right';
+  | 'thumbs_up';
 
 export interface GestureResult {
   gesture: GestureType;
@@ -39,42 +37,6 @@ export interface DualHandState {
   secondary: GestureResult | null;
   /** Distance between two-hand pinch points (for zoom). Null if <2 hands. */
   twoHandPinchDistance: number | null;
-}
-
-// ─── Velocity tracking for swipe detection ──────────────────
-const VELOCITY_BUFFER_SIZE = 6;
-
-interface VelocityBuffer {
-  xs: number[];
-  ts: number[];
-  idx: number;
-  filled: boolean;
-}
-
-function createVelocityBuffer(): VelocityBuffer {
-  return {
-    xs: new Array(VELOCITY_BUFFER_SIZE).fill(0),
-    ts: new Array(VELOCITY_BUFFER_SIZE).fill(0),
-    idx: 0,
-    filled: false,
-  };
-}
-
-function pushVelocitySample(buf: VelocityBuffer, x: number, t: number) {
-  buf.xs[buf.idx] = x;
-  buf.ts[buf.idx] = t;
-  buf.idx = (buf.idx + 1) % VELOCITY_BUFFER_SIZE;
-  if (buf.idx === 0) buf.filled = true;
-}
-
-function getVelocity(buf: VelocityBuffer): number {
-  if (!buf.filled && buf.idx < 2) return 0;
-  const count = buf.filled ? VELOCITY_BUFFER_SIZE : buf.idx;
-  const oldest = (buf.idx - count + VELOCITY_BUFFER_SIZE) % VELOCITY_BUFFER_SIZE;
-  const newest = (buf.idx - 1 + VELOCITY_BUFFER_SIZE) % VELOCITY_BUFFER_SIZE;
-  const dt = buf.ts[newest] - buf.ts[oldest];
-  if (dt === 0) return 0;
-  return (buf.xs[newest] - buf.xs[oldest]) / dt;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -105,15 +67,10 @@ function isThumbExtended(lm: NormalizedLandmark[]): boolean {
 }
 
 // ─── Classifier ──────────────────────────────────────────────
-const velocityBuffers = new Map<string, VelocityBuffer>();
 
-// Fist hold tracking for long-press detection
-const fistStartTimes = new Map<string, number>();
-const FIST_HOLD_DURATION = 1500; // ms
-
-// Swipe cooldown
-let lastSwipeTime = 0;
-const SWIPE_COOLDOWN = 800; // ms
+// Thumbs up hold tracking for reset detection
+const thumbsUpStartTimes = new Map<string, number>();
+const THUMBS_UP_HOLD_DURATION = 1500; // ms
 
 export function classifyGesture(
   landmarks: NormalizedLandmark[],
@@ -121,12 +78,6 @@ export function classifyGesture(
   timestamp: number,
 ): GestureResult {
   const bufKey = handType;
-  if (!velocityBuffers.has(bufKey)) {
-    velocityBuffers.set(bufKey, createVelocityBuffer());
-  }
-  const velBuf = velocityBuffers.get(bufKey)!;
-  const palmX = landmarks[LM.WRIST].x;
-  pushVelocitySample(velBuf, palmX, timestamp);
 
   // Finger states
   const indexExt = isFingerExtended(landmarks, LM.INDEX_TIP, LM.INDEX_PIP);
@@ -172,32 +123,14 @@ export function classifyGesture(
     gesture = 'open_palm';
     confidence = 0.9;
   }
-  // ── 6. Swipe detection (overlaid on open palm) ──
-  if (gesture === 'open_palm' || gesture === 'none') {
-    const vel = getVelocity(velBuf);
-    const now = performance.now();
-    // Velocity is in normalized units per ms; threshold ~0.002 is a quick wrist flick
-    if (Math.abs(vel) > 0.0015 && now - lastSwipeTime > SWIPE_COOLDOWN) {
-      // MediaPipe X is mirrored, so positive velocity = physical left swipe
-      if (vel > 0) {
-        gesture = 'swipe_left';
-        confidence = Math.min(1, Math.abs(vel) / 0.003);
-        lastSwipeTime = now;
-      } else {
-        gesture = 'swipe_right';
-        confidence = Math.min(1, Math.abs(vel) / 0.003);
-        lastSwipeTime = now;
-      }
-    }
-  }
 
-  // Track fist hold time
-  if (gesture === 'fist') {
-    if (!fistStartTimes.has(bufKey)) {
-      fistStartTimes.set(bufKey, timestamp);
+  // Track thumbs up hold time
+  if (gesture === 'thumbs_up') {
+    if (!thumbsUpStartTimes.has(bufKey)) {
+      thumbsUpStartTimes.set(bufKey, timestamp);
     }
   } else {
-    fistStartTimes.delete(bufKey);
+    thumbsUpStartTimes.delete(bufKey);
   }
 
   return {
@@ -211,12 +144,12 @@ export function classifyGesture(
 }
 
 /**
- * Check if fist has been held long enough for a "hold" trigger.
+ * Check if thumbs_up has been held long enough for a "hold" trigger.
  */
-export function isFistHeld(handType: string, currentTimestamp: number): boolean {
-  const start = fistStartTimes.get(handType);
+export function isThumbsUpHeld(handType: string, currentTimestamp: number): boolean {
+  const start = thumbsUpStartTimes.get(handType);
   if (start == null) return false;
-  return currentTimestamp - start >= FIST_HOLD_DURATION;
+  return currentTimestamp - start >= THUMBS_UP_HOLD_DURATION;
 }
 
 /**
@@ -271,7 +204,5 @@ export function classifyDualHands(
  * Reset all internal tracking state (call on mode toggle).
  */
 export function resetClassifier(): void {
-  velocityBuffers.clear();
-  fistStartTimes.clear();
-  lastSwipeTime = 0;
+  thumbsUpStartTimes.clear();
 }

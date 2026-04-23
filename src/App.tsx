@@ -44,36 +44,15 @@ function AppInner() {
     resetPhysics: 0
   });
 
-  const { gesture, fistHeld, pinchReleased, cursorX, isTracking } = useHandTracking();
+  const { gesture, thumbsUpHeld, pinchReleased, cursorX, isTracking } = useHandTracking();
 
-  // ── Gesture: Swipe to switch experiments ──
-  const switchExperiment = useCallback((direction: 'next' | 'prev') => {
-    setCurrentExperiment(prev => {
-      const idx = EXPERIMENT_ORDER.indexOf(prev);
-      if (direction === 'next') {
-        return EXPERIMENT_ORDER[(idx + 1) % EXPERIMENT_ORDER.length];
-      } else {
-        return EXPERIMENT_ORDER[(idx - 1 + EXPERIMENT_ORDER.length) % EXPERIMENT_ORDER.length];
-      }
-    });
-  }, []);
-
+  // ── Gesture: Thumbs Up held → reset ──
   useEffect(() => {
     if (!isTracking) return;
-    if (gesture === 'swipe_right') {
-      switchExperiment('next');
-    } else if (gesture === 'swipe_left') {
-      switchExperiment('prev');
-    }
-  }, [gesture, isTracking, switchExperiment]);
-
-  // ── Gesture: Fist held → reset ──
-  useEffect(() => {
-    if (!isTracking) return;
-    if (fistHeld) {
+    if (thumbsUpHeld) {
       setTriggers(prev => ({ ...prev, resetPhysics: prev.resetPhysics + 1 }));
     }
-  }, [fistHeld, isTracking]);
+  }, [thumbsUpHeld, isTracking]);
 
   // ── Gesture: Pinch release → lab-specific actions ──
   useEffect(() => {
