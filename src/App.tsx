@@ -69,7 +69,7 @@ function AppInner() {
         setTriggers(prev => ({ ...prev, leverDropRight: prev.leverDropRight + 1 }));
       }
     }
-  }, [pinchReleased, isTracking, currentExperiment, cursorX]);
+  }, [pointTriggered, isTracking, currentExperiment, cursorX]);
 
   return (
     <>
