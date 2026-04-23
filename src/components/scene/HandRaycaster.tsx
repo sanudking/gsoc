@@ -45,6 +45,7 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
   const isGrabbingRef = useRef(false);
   const wasPinchingRef = useRef(false);
   const lastGrabStateRef = useRef(false);
+  const isOrbitingRef = useRef(false);
 
   const notifyGrabChange = useCallback((grabbing: boolean) => {
     if (grabbing !== lastGrabStateRef.current) {
@@ -101,11 +102,13 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
 
     const nowPinching = isPinching;
     const wasPinching = wasPinchingRef.current;
+    
+    const nowOrbiting = gesture === 'open_palm';
+    const wasOrbiting = isOrbitingRef.current;
 
-    // Pinch started → only dispatch pointerdown if we hit an interactive object
+    // PINCH LOGIC - For interactive physics objects
     if (nowPinching && !wasPinching) {
       if (hit) {
-        // We hit something interactive — start grabbing
         isGrabbingRef.current = true;
         notifyGrabChange(true);
 
@@ -118,10 +121,8 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
         });
         domElement.dispatchEvent(downEvent);
       }
-      // If no hit → don't dispatch anything → OrbitControls stays unaffected
     }
 
-    // Continuous pinch → only dispatch pointermove if we're actively grabbing
     if (nowPinching && isGrabbingRef.current) {
       const moveEvent = new PointerEvent('pointermove', {
         clientX,
@@ -134,7 +135,6 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
       domElement.dispatchEvent(moveEvent);
     }
 
-    // Pinch released → pointerup only if we were grabbing
     if (!nowPinching && wasPinching) {
       if (isGrabbingRef.current) {
         const upEvent = new PointerEvent('pointerup', {
@@ -150,15 +150,54 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
       }
     }
 
-    // When not pinching and not grabbing, send non-button hover events for onPointerOver
-    if (!nowPinching && !isGrabbingRef.current && gesture !== 'none') {
+    // OPEN PALM LOGIC - For orbiting the scene
+    if (nowOrbiting && !wasOrbiting && !isGrabbingRef.current) {
+      isOrbitingRef.current = true;
+      const downEvent = new PointerEvent('pointerdown', {
+        clientX,
+        clientY,
+        button: 0,
+        bubbles: true,
+        pointerId: 998,
+      });
+      domElement.dispatchEvent(downEvent);
+    }
+
+    if (nowOrbiting && isOrbitingRef.current) {
+      const moveEvent = new PointerEvent('pointermove', {
+        clientX,
+        clientY,
+        button: 0,
+        buttons: 1,
+        bubbles: true,
+        pointerId: 998,
+      });
+      domElement.dispatchEvent(moveEvent);
+    }
+
+    if (!nowOrbiting && wasOrbiting) {
+      if (isOrbitingRef.current) {
+        const upEvent = new PointerEvent('pointerup', {
+          clientX,
+          clientY,
+          button: 0,
+          bubbles: true,
+          pointerId: 998,
+        });
+        domElement.dispatchEvent(upEvent);
+        isOrbitingRef.current = false;
+      }
+    }
+
+    // HOVER LOGIC - For hover states
+    if (!nowPinching && !isGrabbingRef.current && !isOrbitingRef.current && gesture !== 'none') {
       const hoverEvent = new PointerEvent('pointermove', {
         clientX,
         clientY,
         button: 0,
-        buttons: 0, // No buttons pressed → OrbitControls ignores this
+        buttons: 0,
         bubbles: true,
-        pointerId: 999,
+        pointerId: 997,
       });
       domElement.dispatchEvent(hoverEvent);
     }
@@ -170,13 +209,15 @@ export default function HandRaycaster({ onGrabChange }: { onGrabChange?: (grabbi
   const cursorColor =
     isGrabbingRef.current
       ? '#50fa7b'
-      : isPinching
-        ? '#ffb86c'
-        : gesture === 'fist'
-          ? '#ff5555'
-          : gesture === 'point'
-            ? '#ffb86c'
-            : '#8be9fd';
+      : isOrbitingRef.current
+        ? '#ff5555'
+        : isPinching
+          ? '#ffb86c'
+          : gesture === 'fist'
+            ? '#ff5555'
+            : gesture === 'point'
+              ? '#ffb86c'
+              : '#8be9fd';
 
   return (
     <mesh ref={cursorMeshRef} visible={false}>

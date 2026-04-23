@@ -38,8 +38,10 @@ export default function PendulumLab({ params }: { params: PhysicsParams }) {
   const vAnchor = new THREE.Vector3(0, anchorY - 0.2, 0);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const lastPosRef = useRef(new THREE.Vector3());
+  const dragVelRef = useRef(new THREE.Vector3());
 
-  useFrame(({ pointer, camera }) => {
+  useFrame(({ pointer, camera }, delta) => {
     // 1. Update Rope Position & Rotation
     if (ropeRef.current && (bobRef.current as any)) {
        const vBob = new THREE.Vector3();
@@ -62,6 +64,10 @@ export default function PendulumLab({ params }: { params: PhysicsParams }) {
       const distance = -camera.position.z / dir.z; 
       const pos = camera.position.clone().add(dir.multiplyScalar(distance));
       
+      const dt = Math.max(delta, 0.001);
+      dragVelRef.current.copy(pos).sub(lastPosRef.current).multiplyScalar(1 / dt);
+      lastPosRef.current.copy(pos);
+
       bobApi.position.set(pos.x, Math.max(0.5, pos.y), 0);
       bobApi.velocity.set(0, 0, 0);
       document.body.style.cursor = "grabbing";
@@ -102,9 +108,24 @@ export default function PendulumLab({ params }: { params: PhysicsParams }) {
       <mesh 
         ref={bobRef as any} castShadow 
         onPointerOver={() => setIsHovered(true)} onPointerOut={() => setIsHovered(false)}
-        onPointerDown={(e) => { e.stopPropagation(); setIsDragging(true); bobApi.mass.set(0); }}
-        onPointerUp={() => { setIsDragging(false); bobApi.mass.set(params.pendulumMass); }}
-        onPointerMissed={() => { if(isDragging) { setIsDragging(false); bobApi.mass.set(params.pendulumMass); } }}
+        onPointerDown={(e) => { 
+          e.stopPropagation(); 
+          setIsDragging(true); 
+          bobApi.mass.set(0); 
+          lastPosRef.current.copy(bobRef.current.position);
+        }}
+        onPointerUp={() => { 
+          setIsDragging(false); 
+          bobApi.mass.set(params.pendulumMass); 
+          bobApi.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+        }}
+        onPointerMissed={() => { 
+          if(isDragging) { 
+            setIsDragging(false); 
+            bobApi.mass.set(params.pendulumMass); 
+            bobApi.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+          } 
+        }}
       >
         <sphereGeometry args={[bobScale, 32, 32]} />
         <meshStandardMaterial color={isHovered ? "#d8b4fe" : "#bb86fc"} metalness={0.6} roughness={0.2} emissive={isDragging ? "#bb86fc" : "#000"} emissiveIntensity={0.2} />

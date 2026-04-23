@@ -1,9 +1,9 @@
 import { useHandTracking } from '../../lib/gesture/HandTrackingContext';
 
 const GESTURE_HINT: Record<string, string> = {
-  open_palm: 'Move to orbit',
+  open_palm: 'Orbiting...',
   pinch: 'Grabbing...',
-  fist: 'Orbiting...',
+  fist: 'Fist',
   point: 'Pointing',
   thumbs_up: 'Hold to reset',
 };
@@ -18,7 +18,7 @@ export default function HandCursor() {
 
   let className = 'hand-cursor';
   if (isPinching) className += ' pinching';
-  if (gesture === 'thumbs_up') className += ' fist';
+  if (gesture === 'open_palm') className += ' fist';
   if (thumbsUpHeld) className += ' fist-held';
 
   return (

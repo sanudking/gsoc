@@ -16,8 +16,10 @@ function BouncyBall({ position, color, restitution }: { position: [number, numbe
 
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const lastPosRef = useRef(new THREE.Vector3());
+  const dragVelRef = useRef(new THREE.Vector3());
 
-  useFrame(({ pointer, camera }) => {
+  useFrame(({ pointer, camera }, delta) => {
     if (isDragging) {
       const vec = new THREE.Vector3(pointer.x, pointer.y, 0);
       vec.unproject(camera);
@@ -25,6 +27,10 @@ function BouncyBall({ position, color, restitution }: { position: [number, numbe
       const distance = -camera.position.z / dir.z; 
       const pos = camera.position.clone().add(dir.multiplyScalar(distance));
       
+      const dt = Math.max(delta, 0.001);
+      dragVelRef.current.copy(pos).sub(lastPosRef.current).multiplyScalar(1 / dt);
+      lastPosRef.current.copy(pos);
+
       api.position.set(pos.x, Math.max(0.6, pos.y), pos.z || 0);
       api.velocity.set(0, 0, 0);
     }
@@ -34,9 +40,25 @@ function BouncyBall({ position, color, restitution }: { position: [number, numbe
     <mesh 
       ref={ref as any} castShadow 
       onPointerOver={() => setIsHovered(true)} onPointerOut={() => setIsHovered(false)}
-      onPointerDown={(e) => { e.stopPropagation(); setIsDragging(true); api.mass.set(0); }}
-      onPointerUp={() => { setIsDragging(false); api.mass.set(1); }}
-      onPointerMissed={() => { if(isDragging) { setIsDragging(false); api.mass.set(1); } }}
+      onPointerDown={(e) => { 
+        e.stopPropagation(); 
+        setIsDragging(true); 
+        api.mass.set(0); 
+        // Init last pos to prevent massive initial velocity spike
+        lastPosRef.current.copy(ref.current.position);
+      }}
+      onPointerUp={() => { 
+        setIsDragging(false); 
+        api.mass.set(1); 
+        api.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+      }}
+      onPointerMissed={() => { 
+        if(isDragging) { 
+          setIsDragging(false); 
+          api.mass.set(1); 
+          api.velocity.set(dragVelRef.current.x, dragVelRef.current.y, dragVelRef.current.z);
+        } 
+      }}
     >
       <sphereGeometry args={[0.6, 32, 32]} />
       <meshStandardMaterial 

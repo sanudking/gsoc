@@ -195,8 +195,8 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
                   </div>
                   <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>
                     {gesture === 'pinch' && 'Grab objects in the scene'}
-                    {gesture === 'open_palm' && 'Move cursor / orbit camera'}
-                    {gesture === 'fist' && 'Hold to reset the lab'}
+                    {gesture === 'open_palm' && 'Orbiting camera'}
+                    {gesture === 'fist' && 'Fist'}
                     {gesture === 'point' && 'Aim at objects'}
                     {gesture === 'thumbs_up' && 'Nice one! 👍'}
                     {gesture === 'none' && 'Show your hand to the camera'}
@@ -316,9 +316,9 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
             }}>
               Global
             </div>
-            <GestureRow emoji="✊" label="Fist + Move" desc="Orbit camera" active={gesture === 'fist'} />
+            <GestureRow emoji="🖐️" label="Palm + Move" desc="Orbit camera" active={gesture === 'open_palm'} />
             <GestureRow emoji="👍" label="Hold Thumbs Up 1.5s" desc="Reset lab" active={gesture === 'thumbs_up'} />
-            <GestureRow emoji="🖐️" label="Open Palm" desc="Move cursor" active={gesture === 'open_palm'} />
+            <GestureRow emoji="✊" label="Fist" desc="Hover cursor" active={gesture === 'fist'} />
           </div>
 
           {/* Experiment-specific gestures */}
@@ -339,8 +339,8 @@ export default function Overlay({ currentExperiment, onSelect, params, onParamsC
 
             {currentExperiment === 'pendulum' && (
               <>
-                <GestureRow emoji="🤏" label="Pinch + Move" desc="Grab & swing bob" active={gesture === 'pinch'} />
-                <GestureRow emoji="✋" label="Release Pinch" desc="Drop the bob" active={false} />
+                <GestureRow emoji="🤏" label="Pinch + Flick" desc="Grab & throw bob" active={gesture === 'pinch'} />
+                <GestureRow emoji="✋" label="Release Pinch" desc="Release bob" active={false} />
               </>
             )}
 
