@@ -25,3 +25,6 @@ dist-ssr
 .vercel
 
 # Large Media
+
+# Video demos (too large for git)
+assets/
